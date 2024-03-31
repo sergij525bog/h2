@@ -5,6 +5,7 @@ import dev.sbohdan.h2.entity.User;
 import dev.sbohdan.h2.exception.InvalidPasswordException;
 import dev.sbohdan.h2.exception.InvalidUserDataException;
 import dev.sbohdan.h2.exception.UserAlreadyExistsException;
+import dev.sbohdan.h2.repository.ActivationCodeRepository;
 import dev.sbohdan.h2.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -20,12 +21,16 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
 public class UserServiceTest {
     @MockBean
     private UserRepository userRepositoryMock;
+
+    @MockBean
+    private ActivationCodeRepository codeRepository;
 
     @Autowired
     private UserService userService;
@@ -59,12 +64,6 @@ public class UserServiceTest {
     @Test
     public void itShouldFailIfUserAlreadyExists() {
         final String email = "email@email.com";
-        final User userFromDb = new User.UserBuilder()
-                .firstName("FirstName")
-                .lastName("LastName")
-                .email(email)
-                .password("P2ssw^rd")
-                .build();
         final String newUserPassword = "P2ssw^rd2egq";
         final UserDto newUser = new UserDto.UserDtoBuilder()
                 .firstName("Othername")
@@ -74,7 +73,7 @@ public class UserServiceTest {
                 .confirmationPassword(newUserPassword)
                 .build();
 
-        when(userRepositoryMock.findByEmail(email)).thenReturn(userFromDb);
+        when(userRepositoryMock.existsByEmail(email)).thenReturn(true);
 
         assertThrows(UserAlreadyExistsException.class, () -> userService.addUser(newUser));
     }
@@ -105,6 +104,10 @@ public class UserServiceTest {
                 .password("P2ssw^rd")
                 .confirmationPassword("P2ssw^rd")
                 .build();
+        final User user = UserDto.toUser(validUser);
+        user.setId(1L);
+
+        when(userRepositoryMock.save(any())).thenReturn(user);
 
         assertDoesNotThrow(() -> userService.addUser(validUser));
     }

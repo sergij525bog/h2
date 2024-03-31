@@ -10,14 +10,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 
 import java.util.List;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -43,7 +41,7 @@ public class UserServiceTest {
                 .confirmationPassword(value)
                 .build();
 
-        assertThrows(InvalidUserDataException.class, () -> userService.addUer(invalidUser));
+        assertThrows(InvalidUserDataException.class, () -> userService.addUser(invalidUser));
     }
 
     @Test
@@ -55,22 +53,22 @@ public class UserServiceTest {
                 .confirmationPassword("other password")
                 .build();
 
-        assertThrows(InvalidUserDataException.class, () -> userService.addUer(validUser));
+        assertThrows(InvalidUserDataException.class, () -> userService.addUser(validUser));
     }
 
     @Test
     public void itShouldFailIfUserAlreadyExists() {
-        final String email = "email";
+        final String email = "email@email.com";
         final User userFromDb = new User.UserBuilder()
-                .firstName("firstName")
-                .lastName("lastName")
+                .firstName("FirstName")
+                .lastName("LastName")
                 .email(email)
-                .password("password")
+                .password("P2ssw^rd")
                 .build();
-        final String newUserPassword = "other password";
+        final String newUserPassword = "P2ssw^rd2egq";
         final UserDto newUser = new UserDto.UserDtoBuilder()
-                .firstName("other name")
-                .lastName("other name")
+                .firstName("Othername")
+                .lastName("Othername")
                 .email(email)
                 .password(newUserPassword)
                 .confirmationPassword(newUserPassword)
@@ -78,7 +76,7 @@ public class UserServiceTest {
 
         when(userRepositoryMock.findOptionalByEmail(email)).thenReturn(userFromDb);
 
-        assertThrows(UserAlreadyExistsException.class, () -> userService.addUer(newUser));
+        assertThrows(UserAlreadyExistsException.class, () -> userService.addUser(newUser));
     }
 
     @Test
@@ -87,27 +85,27 @@ public class UserServiceTest {
         String longPassword = "123456789012345678901";
         List<UserDto> users = Stream.of(shortPassword, longPassword)
                 .map(p -> new UserDto.UserDtoBuilder()
-                        .firstName("firstname")
-                        .lastName("lastname")
-                        .email("email")
+                        .firstName("Firstname")
+                        .lastName("Lastname")
+                        .email("email@email.com")
                         .password(p)
                         .confirmationPassword(p)
                         .build())
                 .toList();
 
-        users.forEach(user -> assertThrows(InvalidPasswordException.class, () -> userService.addUer(user)));
+        users.forEach(user -> assertThrows(InvalidPasswordException.class, () -> userService.addUser(user)));
     }
 
     @Test
     public void isShouldSaveUserSuccessfully() {
         final UserDto validUser = new UserDto.UserDtoBuilder()
-                .firstName("firstName")
-                .lastName("lastName")
-                .email("email")
-                .password("password")
-                .confirmationPassword("password")
+                .firstName("Firstname")
+                .lastName("Lastname")
+                .email("email@email.com")
+                .password("P2ssw^rd")
+                .confirmationPassword("P2ssw^rd")
                 .build();
 
-        assertDoesNotThrow(() -> userService.addUer(validUser));
+        assertDoesNotThrow(() -> userService.addUser(validUser));
     }
 }

@@ -6,6 +6,7 @@ import dev.sbohdan.h2.exception.InvalidPasswordException;
 import dev.sbohdan.h2.exception.InvalidUserDataException;
 import dev.sbohdan.h2.exception.UserAlreadyExistsException;
 import dev.sbohdan.h2.repository.UserRepository;
+import dev.sbohdan.h2.utils.StringPatternValidationUtils;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,7 +17,7 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public void addUer(final UserDto newUser) {
+    public void addUser(final UserDto newUser) {
         System.out.println(newUser);
         validateUser(newUser);
         userRepository.save(UserDto.toUser(newUser));
@@ -24,20 +25,44 @@ public class UserService {
 
     private void validateUser(final UserDto user) {
         validateUserData(user);
+        checkPasswordIsConfirmed(user.getPassword(), user.getConfirmationPassword());
         validateUserNotAlreadyExists(user.getEmail());
     }
 
     private void validateUserData(final UserDto user) {
-        validateStringIsNotNullOrBlank(user.getFirstName(), "First name");
-        validateStringIsNotNullOrBlank(user.getLastName(), "Last name");
-        validateStringIsNotNullOrBlank(user.getEmail(), "Email");
-        final String password = user.getPassword();
-        validateStringIsNotNullOrBlank(password, "Password");
-        if (password.length() < 8 || password.length() > 20) {
-            throw new InvalidPasswordException("Password length should be between 8 and 20");
-        }
+        validateName(user.getFirstName(), "First name");
+        validateName(user.getLastName(), "Last name");
+        validateEmail(user.getEmail());
+        validatePassword(user.getPassword());
+    }
 
-        if (!password.equals(user.getConfirmationPassword())) {
+    private void validateName(String name, String fieldName) {
+        validateStringIsNotNullOrBlank(name, fieldName);
+        if (!StringPatternValidationUtils.matchesName(name)) {
+            throw new InvalidUserDataException(fieldName + " is invalid");
+        }
+    }
+
+    private void validateEmail(String email) {
+        validateStringIsNotNullOrBlank(email, "Email");
+        if (!StringPatternValidationUtils.matchesEmail(email)) {
+            throw new InvalidUserDataException("Email is invalid");
+        }
+    }
+
+    private void validatePassword(String password) {
+        validateStringIsNotNullOrBlank(password, "Password");
+        final int length = password.length();
+        if (length < 8 || length > 20) {
+            throw new InvalidPasswordException("Password should has length between 8 and 20");
+        }
+        if (!StringPatternValidationUtils.matchesPassword(password)) {
+            throw new InvalidPasswordException("Password is invalid");
+        }
+    }
+
+    private void checkPasswordIsConfirmed(String password, String confirmationPassword) {
+        if (!password.equals(confirmationPassword)) {
             throw new InvalidUserDataException("Password is not confirmed");
         }
     }

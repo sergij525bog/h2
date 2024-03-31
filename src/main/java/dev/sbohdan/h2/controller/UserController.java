@@ -16,6 +16,6 @@ public class UserController {
 
     @PostMapping("/users")
     public void addUser(@RequestBody UserDto newUser) {
-        userService.addUer(newUser);
+        userService.addUser(newUser);
     }
 }

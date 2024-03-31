@@ -5,17 +5,19 @@ spring:
     name: h2
   datasource:
     url: jdbc:h2:file:~/temp/data/testdb
-    username: sa
-    password: password
+    username: ${H2_USERNAME}
+    password: ${H2_PASSWORD}
     driverClassName: org.h2.Driver
   h2:
     console:
-      enabled: true
-      path: /h2-console
+      enabled: ${H2_CONSOLE_ENABLED}
+      path: ${H2_CONSOLE_PATH}
       settings:
         trace: false
   jpa:
     hibernate:
       ddl-auto: update
+    open-in-view: false
+    show-sql: ${SHOW_SQL}
 server:
   port: ${SERVER_PORT}

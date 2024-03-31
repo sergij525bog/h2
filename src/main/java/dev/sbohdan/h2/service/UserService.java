@@ -1,26 +1,60 @@
 package dev.sbohdan.h2.service;
 
+import dev.sbohdan.h2.UserRegistrationEvent;
+import dev.sbohdan.h2.dto.ActivationCodeDto;
 import dev.sbohdan.h2.dto.UserDto;
+import dev.sbohdan.h2.entity.ActivationCode;
 import dev.sbohdan.h2.entity.User;
 import dev.sbohdan.h2.exception.InvalidPasswordException;
 import dev.sbohdan.h2.exception.InvalidUserDataException;
+import dev.sbohdan.h2.exception.UserActivationException;
 import dev.sbohdan.h2.exception.UserAlreadyExistsException;
+import dev.sbohdan.h2.repository.ActivationCodeRepository;
 import dev.sbohdan.h2.repository.UserRepository;
 import dev.sbohdan.h2.utils.StringPatternValidationUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final ActivationCodeRepository codeRepository;
+    private final ApplicationEventPublisher publisher;
 
-    public UserService(final UserRepository userRepository) {
+    public UserService(final UserRepository userRepository, ActivationCodeRepository codeRepository, ApplicationEventPublisher publisher) {
         this.userRepository = userRepository;
+        this.codeRepository = codeRepository;
+        this.publisher = publisher;
     }
 
+    @Transactional
     public void addUser(final UserDto newUser) {
-        System.out.println(newUser);
         validateUser(newUser);
-        userRepository.save(UserDto.toUser(newUser));
+
+        final User inactiveUser = userRepository.save(UserDto.toUser(newUser));
+
+        ActivationCode activationCode = new ActivationCode();
+        final String code = UUID.randomUUID().toString();
+        activationCode.setCode(code);
+        activationCode.setUser(inactiveUser);
+
+        codeRepository.save(activationCode);
+
+        publisher.publishEvent(new UserRegistrationEvent(inactiveUser, code));
+    }
+
+    @Transactional
+    public void activateUser(ActivationCodeDto activationCode) {
+        Long userId = codeRepository.findUserIdByCode(activationCode.getActivationCode());
+
+        if (userId == null) {
+            throw new UserActivationException("User with activation code " + activationCode + " does not found");
+        }
+
+        userRepository.updateActivatedById(userId);
     }
 
     private void validateUser(final UserDto user) {
@@ -77,8 +111,7 @@ public class UserService {
     }
 
     private void validateUserNotAlreadyExists(final String email) {
-        final User savedUser = userRepository.findOptionalByEmail(email);
-        if (savedUser != null) {
+        if (userRepository.existsByEmail(email)) {
             throw new UserAlreadyExistsException("User with email " + email + " already exists!");
         }
     }

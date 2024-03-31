@@ -1,5 +1,6 @@
 package dev.sbohdan.h2.controller;
 
+import dev.sbohdan.h2.dto.ActivationCodeDto;
 import dev.sbohdan.h2.dto.UserDto;
 import dev.sbohdan.h2.service.UserService;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,5 +18,10 @@ public class UserController {
     @PostMapping("/users")
     public void addUser(@RequestBody UserDto newUser) {
         userService.addUser(newUser);
+    }
+
+    @PostMapping("/users/activation")
+    public void activateUser(@RequestBody ActivationCodeDto activationCode) {
+        userService.activateUser(activationCode);
     }
 }

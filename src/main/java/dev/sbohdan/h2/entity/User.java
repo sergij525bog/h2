@@ -4,7 +4,7 @@ import dev.sbohdan.h2.exception.InvalidUserDataException;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = @Index(columnList = "email", unique = true))
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -59,12 +59,8 @@ public class User {
         this.password = password;
     }
 
-    public boolean isActivated() {
-        return activated;
-    }
-
-    public void setActivated(final boolean activated) {
-        this.activated = activated;
+    public void activate() {
+        activated = true;
     }
 
     public static final class UserBuilder {

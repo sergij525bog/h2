@@ -74,7 +74,7 @@ public class UserServiceTest {
                 .confirmationPassword(newUserPassword)
                 .build();
 
-        when(userRepositoryMock.findOptionalByEmail(email)).thenReturn(userFromDb);
+        when(userRepositoryMock.findByEmail(email)).thenReturn(userFromDb);
 
         assertThrows(UserAlreadyExistsException.class, () -> userService.addUser(newUser));
     }

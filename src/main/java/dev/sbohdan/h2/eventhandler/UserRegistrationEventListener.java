@@ -1,5 +1,6 @@
-package dev.sbohdan.h2;
+package dev.sbohdan.h2.eventhandler;
 
+import dev.sbohdan.h2.event.UserRegistrationEvent;
 import dev.sbohdan.h2.service.UserService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

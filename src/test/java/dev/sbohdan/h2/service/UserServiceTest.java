@@ -1,10 +1,13 @@
 package dev.sbohdan.h2.service;
 
+import dev.sbohdan.h2.dto.ActivationCodeDto;
 import dev.sbohdan.h2.dto.UserDto;
+import dev.sbohdan.h2.entity.ActivationCode;
 import dev.sbohdan.h2.entity.User;
 import dev.sbohdan.h2.exception.InvalidPasswordException;
 import dev.sbohdan.h2.exception.InvalidUserDataException;
 import dev.sbohdan.h2.exception.UserAlreadyExistsException;
+import dev.sbohdan.h2.exception.UserNotFoundException;
 import dev.sbohdan.h2.repository.ActivationCodeRepository;
 import dev.sbohdan.h2.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -108,7 +111,54 @@ public class UserServiceTest {
         user.setId(1L);
 
         when(userRepositoryMock.save(any())).thenReturn(user);
+        when(codeRepository.save(any())).thenReturn(new ActivationCode("code"));
 
         assertDoesNotThrow(() -> userService.addUser(validUser));
+    }
+
+    @Test
+    public void itShouldFailIfActivationCodeWasNotFound() {
+        ActivationCodeDto invalidCode = new ActivationCodeDto("invalid code");
+        ActivationCode validCode = new ActivationCode("valid code");
+        final UserDto validUser = new UserDto.UserDtoBuilder()
+                .firstName("Firstname")
+                .lastName("Lastname")
+                .email("email@email.com")
+                .password("P2ssw^rd")
+                .confirmationPassword("P2ssw^rd")
+                .build();
+        final User user = UserDto.toUser(validUser);
+        user.setId(1L);
+
+        when(userRepositoryMock.save(any())).thenReturn(user);
+        when(codeRepository.save(any())).thenReturn(validCode);
+        when(codeRepository.findUserIdByCode(invalidCode.getActivationCode())).thenReturn(null);
+
+        userService.addUser(validUser);
+
+        assertThrows(UserNotFoundException.class, () -> userService.activateUser(invalidCode));
+    }
+
+    @Test
+    public void isShouldActivateUserSuccessfully() {
+        ActivationCodeDto validCodeDto = new ActivationCodeDto("invalid code");
+        ActivationCode validCode = new ActivationCode("valid code");
+        final UserDto validUser = new UserDto.UserDtoBuilder()
+                .firstName("Firstname")
+                .lastName("Lastname")
+                .email("email@email.com")
+                .password("P2ssw^rd")
+                .confirmationPassword("P2ssw^rd")
+                .build();
+        final User user = UserDto.toUser(validUser);
+        user.setId(1L);
+
+        when(userRepositoryMock.save(any())).thenReturn(user);
+        when(codeRepository.save(any())).thenReturn(validCode);
+        when(codeRepository.findUserIdByCode(validCodeDto.getActivationCode())).thenReturn(user.getId());
+
+        userService.addUser(validUser);
+
+        assertDoesNotThrow(() -> userService.activateUser(validCodeDto));
     }
 }

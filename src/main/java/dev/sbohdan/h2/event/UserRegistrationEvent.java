@@ -1,4 +1,4 @@
-package dev.sbohdan.h2;
+package dev.sbohdan.h2.event;
 
 import dev.sbohdan.h2.entity.User;
 import org.springframework.context.ApplicationEvent;

@@ -18,6 +18,10 @@ public class ActivationCode {
     public ActivationCode() {
     }
 
+    public ActivationCode(String code) {
+        this.code = code;
+    }
+
     public Long getId() {
         return id;
     }

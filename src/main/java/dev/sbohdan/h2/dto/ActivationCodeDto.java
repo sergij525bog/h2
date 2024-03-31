@@ -6,6 +6,10 @@ public final class ActivationCodeDto {
     public ActivationCodeDto() {
     }
 
+    public ActivationCodeDto(String activationCode) {
+        this.activationCode = activationCode;
+    }
+
     public String getActivationCode() {
         return activationCode;
     }
